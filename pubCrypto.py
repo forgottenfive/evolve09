@@ -6,52 +6,66 @@
 # import libraries
 import sys
 from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, PKCS1_OAEP
 
 # default variables
-default_extension_public = ".pem"
-default_extension_private = ".pub"
+default_extension = ".enc"
+default_extension_public = ".pub"
 
 # capture names of keys from terminal
 try:
-    # if one argument given, both keys have same name.
-    # if two arguments, name the public key according to the second argument.
+    # first argument = name of key
+    # second argument = name of plaintext file
     if (len(sys.argv) == 2):
-        private_key_name = sys.argv[1]
-        public_key_name = sys.argv[1]
+        pub_file = sys.argv[1]
+        text_file = str(input("Enter the name of the plaintext file: "))
     elif (len(sys.argv) > 2):
-        private_key_name = sys.argv[1]
-        public_key_name = sys.argv[2]
+        pub_file = sys.argv[1]
+        text_file = sys.argv[2]
     else:
-        private_key_name = str(input("Enter a name for the private key file (no extension): "))
-        public_key_name = str(input("Enter a name for the public key file (no extension): "))
-    prv_file = private_key_name + default_extension_private
-    pub_file = public_key_name + default_extension_public
+        pub_file = str(input("Enter the name of the public key file: "))
+        text_file = str(input("Enter the name of the plaintext file: "))
+    write_file = text_file + default_extension
 
 except:
-    print("There was an error creating the key names.\nExiting.")
+    print("Could not stat public key and plaintext file names.\nExiting.")
     sys.exit()
 
 # see if user is ready to proceed
-proceed = input("Your private key file name is\n" + prv_file + "\nYour public key name is\n" + pub_file + "\nKeys will be generated.\nType 'q' to cancel or ENTER to proceed: ")
+proceed = input("Your public key file name is\n" + pub_file + "\nYour plaintext file name is\n" + text_file + "\nType 'q' to cancel or ENTER to proceed to encryption: ")
 if proceed.lower() == 'q':
     print("User canceled operation.\nExiting.")
     sys.exit()
 
-# attempt to generate keys and save to files
-try:
-    print("Generating private key.")
-    my_private_key = RSA.generate(2048)
-    print("Generating public key.")
-    my_public_key = my_private_key.publickey()
-    with open(prv_file, 'wb') as f1:
-        f1.write(my_private_key.exportKey('PEM'))
-    with open(pub_file, 'wb') as f2:
-        f2.write(my_public_key.exportKey('PEM'))
-    print("Writing keys to files.")
-    print("Success! Keys may be found at '" + prv_file + "' and '" + pub_file + "'.\nExiting.")
+# attempt to encrypt the file using the key given
+#try:
 
-except:
-    print("There was a problem generating the keys!\nExiting.")
+print("Reading public key.")
+with open(pub_file, 'r') as f1:
+    key = RSA.importKey(f1.read())
+    # print(key) # debug line
 
+print("Encrypting plaintext.")
+with open(text_file, 'r') as f2:
+    data = f2.read().encode()
+    # print(data) # debug line
+
+# do the encryption
+# referred to pycryptodome.readthedocs.io/en/latest/src/examples.html
+session_key = get_random_bytes(16)
+cipher_rsa = PKCS1_OAEP.new(key)
+enc_session_key = cipher_rsa.encrypt(session_key)
+
+cipher_aes = AES.new(session_key, AES.MODE_EAX)
+ciphertext, tag = cipher_aes.encrypt_and_digest(data)
+
+print("Writing to file.")
+with open(write_file, 'wb') as f3:
+    [ f3.write(x) for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext) ]
+print("Success! Encrypted data written to '" + write_file + "'.\nExiting.")
+
+#except:
+#print("There was a problem encrypting the plaintext!\nExiting.")
 sys.exit()
 
