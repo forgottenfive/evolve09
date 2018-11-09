@@ -9,7 +9,7 @@ from Crypto.PublicKey import RSA
 
 # default variables
 default_extension_public = ".pem"
-default_extension_private = ".key"
+default_extension_private = ".pub"
 
 # capture names of keys from terminal
 try:
