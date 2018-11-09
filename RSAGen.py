@@ -8,8 +8,8 @@ import sys
 from Crypto.PublicKey import RSA
 
 # default variables
-default_extension_public = ".pem"
-default_extension_private = ".pub"
+default_extension_private = ".pem"
+default_extension_public = ".pub"
 
 # capture names of keys from terminal
 try:
