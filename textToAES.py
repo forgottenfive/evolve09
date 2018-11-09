@@ -38,8 +38,8 @@ try:
     iv = Random.new().read(AES.block_size)
     cipher = AES.new(key, AES.MODE_CFB, iv)
     result = iv + cipher.encrypt(data.encode('utf8'))
-    with open (result_file, 'w') as f:
-        f.write(str(result))
+    with open (result_file, 'wb') as f:
+        f.write(result)
     print("File successfully encrypted.")
     print("Result written to '" + result_file + "'.\nExiting.")
 except:
